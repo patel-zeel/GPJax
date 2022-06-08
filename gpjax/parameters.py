@@ -187,6 +187,19 @@ def transform(params: tp.Dict, transform_map: tp.Dict) -> tp.Dict:
         lambda param, trans: trans(param), params, transform_map
     )
 
+def build_identity(params: tp.Dict) -> tp.Dict:
+    """"
+    Args:
+        params (tp.Dict): The parameter set for which trainable statuses should be derived from.
+
+    Returns:
+        tp.Dict: A dictionary of identity forward/backward bijectors. The dictionary is equal in structure to the input params dictionary.
+    """
+    # Copy dictionary structure
+    prior_container = deepcopy(params)
+
+    return jax.tree_map(lambda _: Identity.forward, prior_container)
+
 
 ################################
 # Priors
