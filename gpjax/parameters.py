@@ -1,6 +1,5 @@
 import typing as tp
 import warnings
-from collections import namedtuple
 from copy import deepcopy
 from warnings import warn
 
@@ -15,7 +14,7 @@ from .config import get_defaults
 from .types import PRNGKeyType
 from .utils import merge_dictionaries
 
-Identity = dx.Lambda(forward=lambda x: x, inverse=lambda x: x)
+Identity = dx.Lambda(forward = lambda x: x, inverse = lambda x: x)
 
 
 ################################
