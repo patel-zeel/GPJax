@@ -8,7 +8,7 @@ from chex import dataclass
 from jaxtyping import f64
 
 from .config import get_defaults
-from .kernels import Kernel, cross_covariance, gram
+from .kernels import Kernel
 from .likelihoods import (
     AbstractLikelihood,
     Conjugate,
@@ -80,6 +80,7 @@ class Prior(AbstractGP):
         Returns:
             tp.Callable[[Array], Array]: A mean function that accepts an input array for where the mean function should be evaluated at. The mean function's value at these points is then returned.
         """
+        gram = self.kernel.gram
 
         def predict_fn(test_inputs: f64["N D"]) -> dx.Distribution:
             t = test_inputs
@@ -150,6 +151,10 @@ class ConjugatePosterior(AbstractPosterior):
             tp.Callable[[Array], dx.Distribution]: A function that accepts an input array and returns the predictive distribution as a `distrax.MultivariateNormalFullCovariance`.
         """
         x, y, n = train_data.X, train_data.y, train_data.n
+        gram, cross_covariance = (
+            self.prior.kernel.gram,
+            self.prior.kernel.cross_covariance,
+        )
 
         # Observation noise σ²
         obs_noise = params["likelihood"]["obs_noise"]
@@ -208,6 +213,7 @@ class ConjugatePosterior(AbstractPosterior):
             tp.Callable[[dict], Array]: A functional representation of the marginal log-likelihood that can be evaluated at a given parameter set.
         """
         x, y, n = train_data.X, train_data.y, train_data.n
+        gram = self.prior.kernel.gram
 
         def mll(
             params: dict,
@@ -271,6 +277,10 @@ class NonConjugatePosterior(AbstractPosterior):
             tp.Callable[[Array], dx.Distribution]: A function that accepts an input array and returns the predictive distribution as a `distrax.MultivariateNormalFullCovariance`.
         """
         x, n = train_data.X, train_data.n
+        gram, cross_covariance = (
+            self.prior.kernel.gram,
+            self.prior.kernel.cross_covariance,
+        )
 
         Kxx = gram(self.prior.kernel, x, params["kernel"])
         Kxx += I(n) * self.jitter
@@ -318,7 +328,7 @@ class NonConjugatePosterior(AbstractPosterior):
             tp.Callable[[dict], Array]: A functional representation of the marginal log-likelihood that can be evaluated at a given parameter set.
         """
         x, y, n = train_data.X, train_data.y, train_data.n
-
+        gram = self.prior.kernel.gram
         if not priors:
             priors = copy_dict_structure(self.params)
             priors["latent"] = dx.Normal(loc=0.0, scale=1.0)

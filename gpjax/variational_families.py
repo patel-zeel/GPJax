@@ -10,7 +10,6 @@ from jaxtyping import f64
 
 from .config import Identity, Softplus, add_parameter, get_defaults
 from .gps import Prior
-from .kernels import cross_covariance, gram
 from .likelihoods import AbstractLikelihood, Gaussian
 from .types import Dataset
 from .utils import I, concat_dictionaries
@@ -106,6 +105,7 @@ class VariationalGaussian(AbstractVariationalFamily):
         Returns:
             Array: The KL-divergence between our variational approximation and the GP prior.
         """
+        gram = self.prior.kernel.gram
         mu = params["variational_family"]["variational_mean"]
         sqrt = params["variational_family"]["variational_root_covariance"]
         m = self.num_inducing
@@ -137,6 +137,11 @@ class VariationalGaussian(AbstractVariationalFamily):
         sqrt = params["variational_family"]["variational_root_covariance"]
         z = params["variational_family"]["inducing_inputs"]
         m = self.num_inducing
+
+        gram, cross_covariance = (
+            self.prior.kernel.gram,
+            self.prior.kernel.cross_covariance,
+        )
 
         Kzz = gram(self.prior.kernel, z, params["kernel"])
         Kzz += I(m) * self.jitter
@@ -226,6 +231,11 @@ class WhitenedVariationalGaussian(VariationalGaussian):
         z = params["variational_family"]["inducing_inputs"]
         m = self.num_inducing
 
+        gram, cross_covariance = (
+            self.prior.kernel.gram,
+            self.prior.kernel.cross_covariance,
+        )
+
         Kzz = gram(self.prior.kernel, z, params["kernel"])
         Kzz += I(m) * self.jitter
         Lz = jnp.linalg.cholesky(Kzz)
@@ -304,6 +314,11 @@ class CollapsedVariationalGaussian(AbstractVariationalFamily):
             Callable[[Array], dx.Distribution]: A function that accepts a set of test points and will return the predictive distribution at those points.
         """
         x, y = train_data.X, train_data.y
+
+        gram, cross_covariance = (
+            self.prior.kernel.gram,
+            self.prior.kernel.cross_covariance,
+        )
 
         noise = params["likelihood"]["obs_noise"]
         z = params["variational_family"]["inducing_inputs"]

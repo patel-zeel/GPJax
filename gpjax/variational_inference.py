@@ -8,7 +8,6 @@ from jax import vmap
 from jaxtyping import f64
 
 from .gps import AbstractPosterior
-from .kernels import cross_covariance, diagonal, gram
 from .likelihoods import Gaussian
 from .parameters import transform
 from .quadrature import gauss_hermite_quadrature
@@ -158,6 +157,10 @@ class CollapsedVI(AbstractVariationalInference):
         x, y, n = train_data.X, train_data.y, train_data.n
 
         m = self.num_inducing
+        gram, cross_covariance = (
+            self.prior.kernel.gram,
+            self.prior.kernel.cross_covariance,
+        )
 
         def elbo_fn(params: Dict) -> f64["1"]:
             params = transform(params, transformations)
