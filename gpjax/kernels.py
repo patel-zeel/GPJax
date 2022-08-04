@@ -380,7 +380,9 @@ class KroneckerKernelComputation(AbstractKernelComputation):
         for k, params in zip(kernel.kernel_set, params):
 
             # Filter grid based on active dims.
-            _, indices = jnp.unique(inputs[..., k.active_dims], return_index=True)
+            _, indices = jnp.unique(
+                inputs[..., k.active_dims], return_index=True, axis=0
+            )
 
             gram_matrices.append(k.gram(k, inputs[indices], params))
         # ---
@@ -419,7 +421,9 @@ class KroneckerKernelComputation(AbstractKernelComputation):
         for k, params in zip(kernel.kernel_set, params):
 
             # Filter grid based on active dims.
-            _, indices = jnp.unique(inputs[..., k.active_dims], return_index=True)
+            _, indices = jnp.unique(
+                inputs[..., k.active_dims], return_index=True, axis=0
+            )
 
             gram_matrices.append(
                 k.gram_solve(k, inputs[indices], params, I(inputs.shape[0]))
@@ -447,22 +451,6 @@ class KroneckerKernelComputation(AbstractKernelComputation):
         gram_matrices = []
         for k in kernel.kernel_set:
             gram_matrices.append(DenseKernelComputation.gram(k, inputs, params))
-
-
-@dataclass
-class KroneckerKernel(CombinationKernel):
-    name: Optional[str] = "Product kernel"
-    combination_fn: Optional[Callable] = jnp.kron
-
-
-#     # TODO - Implement this. Probably need a super class that acts on the kernel list.
-
-#     def __call__(self, x: f64["1 D"], y: f64["1 D"], params: dict) -> f64["1"]:
-#         gram_matrices = []
-#         dense_gram_fn = DenseKernelComputation().gram
-#         for kernel in self.kernel_set:
-#             gram_matrices.append(dense_gram_fn(kernel, x, params))
-#         gram_matrics = [k(x, y, p) for k, p in zip(self.kernel_set, params)]
 
 
 ##########################################
