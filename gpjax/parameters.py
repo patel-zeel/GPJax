@@ -198,7 +198,7 @@ def build_identity(params: Dict) -> Dict:
     # Copy dictionary structure
     prior_container = deepcopy(params)
 
-    return jax.tree_map(lambda _: Identity.forward, prior_container)
+    return jax.tree_util.tree_map(lambda _: Identity.forward, prior_container)
 
 
 ################################
@@ -303,7 +303,7 @@ def build_trainables_false(params: Dict) -> Dict:
     # Copy dictionary structure
     prior_container = deepcopy(params)
     # Set all values to zero
-    prior_container = jax.tree_map(lambda _: False, prior_container)
+    prior_container = jax.tree_util.tree_map(lambda _: False, prior_container)
     return prior_container
 
 
