@@ -10,6 +10,10 @@ from gpjax.gps import Prior
 from gpjax.kernels import RBF
 from gpjax.likelihoods import Bernoulli, Gaussian
 from gpjax.parameters import (  # build_all_transforms,
+    Identity,
+    build_identity,
+    build_trainables_false,
+    build_trainables_true,
     build_transforms,
     copy_dict_structure,
     evaluate_priors,
@@ -20,11 +24,6 @@ from gpjax.parameters import (  # build_all_transforms,
     recursive_items,
     structure_priors,
     transform,
-    build_trainables_true,
-    build_trainables_false,
-    build_identity,
-    Identity
-
 )
 
 
@@ -265,18 +264,27 @@ def test_output(num_datapoints, likelihood):
 @pytest.mark.parametrize("state", [True, False])
 def test_build_trainables(state):
     posterior = Prior(kernel=RBF()) * Gaussian(num_datapoints=10)
-    params, _, constrainer, unconstrainer = initialise(posterior)
+    params, _, constrainer, unconstrainer = initialise(
+        posterior, jr.PRNGKey(123)
+    ).unpack()
 
     if state == True:
         trainables = build_trainables_true(params)
     else:
         trainables = build_trainables_false(params)
-    
-    jnp.array([v1 == state for k, v1, v2 in recursive_items(trainables, trainables)]).all()
+
+    jnp.array(
+        [v1 == state for k, v1, v2 in recursive_items(trainables, trainables)]
+    ).all()
+
 
 def test_build_identity():
     posterior = Prior(kernel=RBF()) * Gaussian(num_datapoints=10)
-    params, _, constrainer, unconstrainer = initialise(posterior)
+    params, _, constrainer, unconstrainer = initialise(
+        posterior, jr.PRNGKey(123)
+    ).unpack()
     identity_dict = build_identity(params)
 
-    jnp.array([v1 == Identity for k, v1, v2 in recursive_items(identity_dict, identity_dict)]).all()
+    jnp.array(
+        [v1 == Identity for k, v1, v2 in recursive_items(identity_dict, identity_dict)]
+    ).all()
