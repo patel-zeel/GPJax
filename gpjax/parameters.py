@@ -14,7 +14,7 @@ from .config import get_defaults
 from .types import PRNGKeyType
 from .utils import merge_dictionaries
 
-Identity = dx.Lambda(forward = lambda x: x, inverse = lambda x: x)
+Identity = dx.Lambda(forward=lambda x: x, inverse=lambda x: x)
 
 
 ################################
@@ -52,6 +52,7 @@ def initialise(model, key: PRNGKeyType = None, **kwargs) -> ParameterState:
         unconstrainers=unconstrainers,
     )
     return state
+
 
 def _validate_kwargs(kwargs, params):
     for k, v in kwargs.items():
@@ -185,8 +186,9 @@ def transform(params: tp.Dict, transform_map: tp.Dict) -> tp.Dict:
         lambda param, trans: trans(param), params, transform_map
     )
 
+
 def build_identity(params: tp.Dict) -> tp.Dict:
-    """"
+    """ "
     Args:
         params (tp.Dict): The parameter set for which trainable statuses should be derived from.
 
