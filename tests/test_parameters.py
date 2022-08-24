@@ -9,11 +9,8 @@ from tensorflow_probability.substrates.jax import distributions as tfd
 from gpjax.gps import Prior
 from gpjax.kernels import RBF
 from gpjax.likelihoods import Bernoulli, Gaussian
-from gpjax.parameters import (  # build_all_transforms,
-    Identity,
-    build_identity,
-    build_trainables_false,
-    build_trainables_true,
+from gpjax.parameters import (
+    build_trainables,
     build_transforms,
     copy_dict_structure,
     evaluate_priors,
@@ -241,6 +238,10 @@ def test_output(num_datapoints, likelihood):
         assert isinstance(v1, tp.Callable)
         assert isinstance(v2, tp.Callable)
 
+    # Test passing None is the identity function:
+    trans_params = transform(params, None)
+    assert trans_params == params
+
     unconstrained_params = transform(params, unconstrainer)
     assert (
         unconstrained_params["kernel"]["lengthscale"] != params["kernel"]["lengthscale"]
@@ -268,23 +269,8 @@ def test_build_trainables(state):
         posterior, jr.PRNGKey(123)
     ).unpack()
 
-    if state == True:
-        trainables = build_trainables_true(params)
-    else:
-        trainables = build_trainables_false(params)
+    trainables = build_trainables(params, state)
 
     jnp.array(
         [v1 == state for k, v1, v2 in recursive_items(trainables, trainables)]
-    ).all()
-
-
-def test_build_identity():
-    posterior = Prior(kernel=RBF()) * Gaussian(num_datapoints=10)
-    params, _, constrainer, unconstrainer = initialise(
-        posterior, jr.PRNGKey(123)
-    ).unpack()
-    identity_dict = build_identity(params)
-
-    jnp.array(
-        [v1 == Identity for k, v1, v2 in recursive_items(identity_dict, identity_dict)]
     ).all()

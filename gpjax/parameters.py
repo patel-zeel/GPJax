@@ -44,7 +44,7 @@ def initialise(model, key: PRNGKeyType = None, **kwargs) -> ParameterState:
         for k, v in kwargs.items():
             params[k] = merge_dictionaries(params[k], v)
     constrainers, unconstrainers = build_transforms(params)
-    trainables = build_trainables_true(params)
+    trainables = build_trainables(params)
     state = ParameterState(
         params=params,
         trainables=trainables,
@@ -180,25 +180,16 @@ def transform(params: Dict, transform_map: Dict) -> Dict:
         transform_map (Dict): The corresponding dictionary of transforms that should be applied to the parameter set.
 
     Returns:
-        Dict: A transformed parameter set.s The dictionary is equal in structure to the input params dictionary.
+        Dict: A transformed parameter set. The dictionary is equal in structure to the input params dictionary.
     """
-    return jax.tree_util.tree_map(
-        lambda param, trans: trans(param), params, transform_map
-    )
 
+    if transform_map is None:
+        return params
 
-def build_identity(params: Dict) -> Dict:
-    """ "
-    Args:
-        params (Dict): The parameter set for which trainable statuses should be derived from.
-
-    Returns:
-        Dict: A dictionary of identity forward/backward bijectors. The dictionary is equal in structure to the input params dictionary.
-    """
-    # Copy dictionary structure
-    prior_container = deepcopy(params)
-
-    return jax.tree_util.tree_map(lambda _: Identity.forward, prior_container)
+    else:
+        return jax.tree_util.tree_map(
+            lambda param, trans: trans(param), params, transform_map
+        )
 
 
 ################################
@@ -275,11 +266,12 @@ def prior_checks(priors: Dict) -> Dict:
     return priors
 
 
-def build_trainables_true(params: Dict) -> Dict:
+def build_trainables(params: Dict, status: bool = True) -> Dict:
     """Construct a dictionary of trainable statuses for each parameter. By default, every parameter within the model is trainable.
 
     Args:
         params (Dict): The parameter set for which trainable statuses should be derived from.
+        status (bool): The status of each parameter. Default is True.
 
     Returns:
         Dict: A dictionary of boolean trainability statuses. The dictionary is equal in structure to the input params dictionary.
@@ -287,23 +279,7 @@ def build_trainables_true(params: Dict) -> Dict:
     # Copy dictionary structure
     prior_container = deepcopy(params)
     # Set all values to zero
-    prior_container = jax.tree_util.tree_map(lambda _: True, prior_container)
-    return prior_container
-
-
-def build_trainables_false(params: Dict) -> Dict:
-    """Construct a dictionary of trainable statuses for each parameter. By default, every parameter within the model is NOT trainable.
-
-    Args:
-        params (Dict): The parameter set for which trainable statuses should be derived from.
-
-    Returns:
-        Dict: A dictionary of boolean trainability statuses. The dictionary is equal in structure to the input params dictionary.
-    """
-    # Copy dictionary structure
-    prior_container = deepcopy(params)
-    # Set all values to zero
-    prior_container = jax.tree_util.tree_map(lambda _: False, prior_container)
+    prior_container = jax.tree_util.tree_map(lambda _: status, prior_container)
     return prior_container
 
 
