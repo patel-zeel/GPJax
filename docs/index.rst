@@ -66,6 +66,13 @@ To learn more, checkout the `regression notebook <https://gpjax.readthedocs.io/e
 
 .. toctree::
     :maxdepth: 1
+    :caption: Experimental
+    :hidden:
+
+    nbs/natgrads
+
+.. toctree::
+    :maxdepth: 1
     :caption: Package Reference
     :hidden:
 
